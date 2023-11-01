@@ -13,27 +13,51 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let points = Vec::from([
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
-        Vec3::new(1.0, 1.0, 1.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
     ]);
 
-    let v0 = Vec3::new(0.0, -0.5, 0.0);
-    let v1 = Vec3::new(0.0, 0.5, 0.0);
-    let v2 = Vec3::ZERO;
-    let up = Vec3::Z;
+    let v0 = Vec3::new(0.0, -0.5, 0.0); // mut for right only!!
+    let mut v1 = Vec3::new(0.0, 0.5, 0.0);
+    let mut v2 = Vec3::new(1.0, 0.0, 0.0); // Dummy point to establish "up"
 
-    let mut vertices: Vec<Vec3> = Vec::new();
+    // Standing on the XY plane, Z is "up" and X is "forward"
+    //let mut origin = Vec3::ZERO;
+    let mut up = Vec3::Z;
+    let mut right = -Vec3::Y;
+
+    let mut vertices = vec![v0, v1];
+    let mut edges = vec![(v0, v1)];
 
     for point in points {
-        vertices.push(v0);
-        vertices.push(v1);
+        let origin = (v0 + v1) / 2.0;
+        let new_right = (v0 - v1).normalize();
+        let new_up = (v1 - v2).cross(v0 - v1).normalize();
+
+        let mut transform = Transform::from_translation(point + origin);
+        transform.rotate(Quat::from_rotation_arc(up, new_up));
+        transform.rotate(Quat::from_rotation_arc(right, new_right));
+
+        v2 = transform.translation;
+
+        vertices.push(v2);
+        edges.push((v0, v2));
+        edges.push((v1, v2));
+
+        v1 = v2;
+        up = new_up;
+        right = new_right;
+
+        /*
+
+           transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
+           transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
+           transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
+
+        */
     }
 
     for vertex in vertices {
