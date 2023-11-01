@@ -12,15 +12,12 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let cube_handle = meshes.add(Mesh::from(shape::Cube { size: 2.0 }));
-    let cube_material_handle = materials.add(StandardMaterial {
-        base_color: Color::rgb(0.8, 0.7, 0.6),
-        ..default()
-    });
-
     commands.spawn(PbrBundle {
-        mesh: cube_handle.clone(),
-        material: cube_material_handle.clone(),
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
+        material: materials.add(StandardMaterial {
+            base_color: Color::rgb(0.8, 0.7, 0.6),
+            ..default()
+        }),
         transform: Transform::from_xyz(0.0, 0.0, 1.0),
         ..default()
     });
