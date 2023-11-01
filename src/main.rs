@@ -1,10 +1,16 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, transform};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
         .run();
+}
+
+enum Chirality {
+    Left,
+    Right,
+    Foo,
 }
 
 fn setup(
@@ -30,7 +36,7 @@ fn setup(
     let mut right = -Vec3::Y;
 
     let mut vertices = vec![v0, v1];
-    let mut edges = vec![(v0, v1)];
+    let mut edges = vec![(Chirality::Foo, v0, v1)];
 
     for point in points {
         let origin = (v0 + v1) / 2.0;
@@ -44,26 +50,18 @@ fn setup(
         v2 = transform.translation;
 
         vertices.push(v2);
-        edges.push((v0, v2));
-        edges.push((v1, v2));
+        edges.push((Chirality::Left, v0, v2));
+        edges.push((Chirality::Right, v1, v2));
 
         v1 = v2;
         up = new_up;
         right = new_right;
-
-        /*
-
-           transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
-           transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
-           transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
-
-        */
     }
 
     for vertex in vertices {
         commands.spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::UVSphere {
-                radius: 1.0 / 40.0,
+                radius: 1.0 / 20.0,
                 ..Default::default()
             })),
             material: materials.add(StandardMaterial {
@@ -74,13 +72,37 @@ fn setup(
             ..default()
         });
     }
+    for (chirality, a, b) in edges {
+        let height = (a - b).length();
+        let direction = (a - b).normalize();
+        let base_color = match chirality {
+            Chirality::Foo => Color::WHITE,
+            Chirality::Left => Color::BLUE,
+            Chirality::Right => Color::RED,
+        };
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cylinder {
+                radius: 1.0 / 30.0,
+                height,
+                ..Default::default()
+            })),
+            material: materials.add(StandardMaterial {
+                base_color,
+                ..default()
+            }),
+            transform: Transform::from_translation((a + b) / 2.0)
+                .with_rotation(Quat::from_rotation_arc(Vec3::Y, direction)),
+            ..default()
+        });
+    }
+
     commands.spawn(PointLightBundle {
         transform: Transform::from_xyz(4.0, 5.0, -4.0),
         ..default()
     });
 
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Z),
         ..default()
     });
 }
