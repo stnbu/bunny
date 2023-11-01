@@ -26,6 +26,7 @@ fn setup(
         // ----
         // ----
         Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
     ]);
 
     // You are given two points.
@@ -52,6 +53,20 @@ fn setup(
 
     for (i, point) in points.iter().enumerate() {
         let origin = (v0 + v1) / 2.0;
+        // Fat ball at the origin(s) for debug
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::UVSphere {
+                radius: 1.0 / 25.0,
+                ..Default::default()
+            })),
+            material: materials.add(StandardMaterial {
+                base_color: Color::WHITE,
+                ..default()
+            }),
+            transform: Transform::from_translation(origin),
+            ..default()
+        });
+        //
         let new_right = (v0 - v1).normalize();
 
         println!(
@@ -80,7 +95,7 @@ fn setup(
         edges.push((Chirality::Left, v0, v2));
         edges.push((Chirality::Right, v1, v2));
 
-        v1 = v2;
+        v1 = v2; // turn to the left!
         up = new_up;
         right = new_right;
         println!("\n\n\n");
@@ -138,12 +153,12 @@ fn setup(
     }
 
     commands.spawn(PointLightBundle {
-        transform: Transform::from_xyz(4.0, 5.0, -4.0),
+        transform: Transform::from_xyz(4.0, 5.0, 8.0),
         ..default()
     });
 
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, 0.0, 8.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 }
